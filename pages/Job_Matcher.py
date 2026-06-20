@@ -15,12 +15,72 @@ import streamlit as st
 
 from src.database import get_all_resumes, init_db
 from src.matcher import analyze_match
+from src.services.match_engine import HIGH_PRIORITY_SKILLS, MEDIUM_PRIORITY_SKILLS, LOW_PRIORITY_SKILLS
+from src.services.skill_categorizer import categorize_skill, SkillCategory
 from src.utils import get_env, load_env
 
 load_env()
 init_db()
 
 DB_PATH = Path(get_env("DATABASE_PATH", "data/hireflow.db"))
+
+
+def get_priority_badge(skill: str) -> str:
+    """Get priority badge for a skill."""
+    skill_lower = skill.lower()
+    if skill_lower in [s.lower() for s in HIGH_PRIORITY_SKILLS]:
+        return ' <span style="background-color: #dc3545; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; margin-left: 4px;">HIGH</span>'
+    elif skill_lower in [s.lower() for s in MEDIUM_PRIORITY_SKILLS]:
+        return ' <span style="background-color: #ffc107; color: #333; padding: 2px 6px; border-radius: 8px; font-size: 10px; margin-left: 4px;">MED</span>'
+    elif skill_lower in [s.lower() for s in LOW_PRIORITY_SKILLS]:
+        return ' <span style="background-color: #6c757d; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; margin-left: 4px;">LOW</span>'
+    return ''
+
+
+def get_skill_color(skill: str, is_matched: bool) -> str:
+    """Get background color for skill chip based on match status and category."""
+    if not is_matched:
+        return "#fff5f5"  # Light red for missing
+    
+    category = categorize_skill(skill)
+    category_colors = {
+        SkillCategory.PROGRAMMING_LANGUAGES: "#e3f2fd",
+        SkillCategory.FRONTEND: "#f3e5f5",
+        SkillCategory.BACKEND: "#e8f5e9",
+        SkillCategory.DATABASES: "#fff3e0",
+        SkillCategory.CLOUD: "#fce4ec",
+        SkillCategory.DEVOPS: "#e0f2f1",
+        SkillCategory.DATA_SCIENCE: "#f1f8e9",
+        SkillCategory.TESTING: "#fff9c4",
+        SkillCategory.MOBILE: "#e8eaf6",
+        SkillCategory.TOOLS: "#f5f5f5",
+        SkillCategory.SOFT_SKILLS: "#fce4ec",
+        SkillCategory.OTHER: "#f5f5f5",
+    }
+    return category_colors.get(category, "#d4edda")
+
+
+def get_skill_text_color(skill: str, is_matched: bool) -> str:
+    """Get text color for skill chip based on match status and category."""
+    if not is_matched:
+        return "#c53030"  # Dark red for missing
+    
+    category = categorize_skill(skill)
+    category_text_colors = {
+        SkillCategory.PROGRAMMING_LANGUAGES: "#1565c0",
+        SkillCategory.FRONTEND: "#7b1fa2",
+        SkillCategory.BACKEND: "#2e7d32",
+        SkillCategory.DATABASES: "#ef6c00",
+        SkillCategory.CLOUD: "#c2185b",
+        SkillCategory.DEVOPS: "#00695c",
+        SkillCategory.DATA_SCIENCE: "#558b2f",
+        SkillCategory.TESTING: "#f57f17",
+        SkillCategory.MOBILE: "#283593",
+        SkillCategory.TOOLS: "#424242",
+        SkillCategory.SOFT_SKILLS: "#c2185b",
+        SkillCategory.OTHER: "#424242",
+    }
+    return category_text_colors.get(category, "#155724")
 
 st.set_page_config(page_title="Job Matcher", page_icon="🎯", layout="wide")
 
@@ -135,8 +195,9 @@ if st.button("Analyze Match", type="primary", disabled=not job_description):
             st.markdown("### ✅ Matched Skills")
             if match_results["matched_skills"]:
                 matched_skills_list = sorted(match_results["matched_skills"])
+                # Enhanced skill chips with priority indicators
                 chips_html = " ".join([
-                    f'<span style="background-color: #d4edda; color: #155724; padding: 4px 12px; border-radius: 16px; margin: 4px; display: inline-block; font-size: 14px;">{skill}</span>'
+                    f'<span style="background-color: {get_skill_color(skill, True)}; color: {get_skill_text_color(skill, True)}; padding: 6px 14px; border-radius: 20px; margin: 4px; display: inline-block; font-size: 13px; font-weight: 500; border: 1px solid rgba(0,0,0,0.1);">{skill}{get_priority_badge(skill)}</span>'
                     for skill in matched_skills_list
                 ])
                 st.markdown(chips_html, unsafe_allow_html=True)
@@ -147,8 +208,9 @@ if st.button("Analyze Match", type="primary", disabled=not job_description):
             st.markdown("### ❌ Missing Skills")
             if match_results["missing_skills"]:
                 missing_skills_list = sorted(match_results["missing_skills"])
+                # Enhanced skill chips with priority indicators
                 chips_html = " ".join([
-                    f'<span style="background-color: #f8d7da; color: #721c24; padding: 4px 12px; border-radius: 16px; margin: 4px; display: inline-block; font-size: 14px;">{skill}</span>'
+                    f'<span style="background-color: {get_skill_color(skill, False)}; color: {get_skill_text_color(skill, False)}; padding: 6px 14px; border-radius: 20px; margin: 4px; display: inline-block; font-size: 13px; font-weight: 500; border: 1px solid rgba(0,0,0,0.1);">{skill}{get_priority_badge(skill)}</span>'
                     for skill in missing_skills_list
                 ])
                 st.markdown(chips_html, unsafe_allow_html=True)
@@ -218,21 +280,45 @@ if st.button("Analyze Match", type="primary", disabled=not job_description):
                 st.caption("No skill data available")
         
         with tab2:
-            st.markdown("### Match Distribution")
-            matched_count = match_results["matched_count"]
-            missing_count = len(match_results["missing_skills"])
+            st.markdown("### Category Match Distribution")
+            category_match = analysis["category_match"]
             
-            fig = go.Figure(data=[
-                go.Bar(name="Matched", x=["Skills"], y=[matched_count], marker_color="#28a745"),
-                go.Bar(name="Missing", x=["Skills"], y=[missing_count], marker_color="#dc3545")
-            ])
-            fig.update_layout(
-                title="Matched vs Missing Skills",
-                barmode="stack",
-                yaxis_title="Count",
-                xaxis_title="",
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if category_match:
+                categories = list(category_match.keys())
+                match_percentages = [category_match[cat]["match_percentage"] for cat in categories]
+                
+                # Category-wise match chart
+                fig = go.Figure(data=[
+                    go.Bar(name="Match %", x=categories, y=match_percentages, 
+                           marker_color='rgba(76, 175, 80, 0.8)',
+                           text=[f"{pct}%" for pct in match_percentages],
+                           textposition='outside')
+                ])
+                fig.update_layout(
+                    title="Match Percentage by Category",
+                    yaxis_title="Match Percentage",
+                    xaxis_title="Category",
+                    yaxis_range=[0, 100],
+                    height=500,
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Detailed category breakdown
+                st.markdown("#### Category Breakdown")
+                category_data = []
+                for cat in categories:
+                    category_data.append({
+                        "Category": cat,
+                        "Match %": category_match[cat]["match_percentage"],
+                        "Matched": category_match[cat]["matched_count"],
+                        "Missing": category_match[cat]["missing_count"],
+                        "Total": category_match[cat]["total_count"]
+                    })
+                
+                category_df = __import__('pandas').DataFrame(category_data)
+                st.dataframe(category_df, use_container_width=True, hide_index=True)
+            else:
+                st.caption("No category data available")
         
         with tab3:
             st.markdown("### Category Gap Analysis")
@@ -241,17 +327,56 @@ if st.button("Analyze Match", type="primary", disabled=not job_description):
             if category_match:
                 categories = list(category_match.keys())
                 match_percentages = [category_match[cat]["match_percentage"] for cat in categories]
+                missing_counts = [category_match[cat]["missing_count"] for cat in categories]
+                matched_counts = [category_match[cat]["matched_count"] for cat in categories]
                 
-                fig = px.bar(
+                # Enhanced gap analysis chart
+                fig = go.Figure()
+                
+                # Add match percentage bars
+                fig.add_trace(go.Bar(
                     x=categories,
                     y=match_percentages,
-                    title="Match Percentage by Category",
-                    labels={"x": "Category", "y": "Match %"},
-                    color=match_percentages,
-                    color_continuous_scale="RdYlGn",
+                    name="Match %",
+                    marker_color='rgba(76, 175, 80, 0.8)',
+                    text=[f"{pct}%" for pct in match_percentages],
+                    textposition='outside',
+                ))
+                
+                # Add gap indicator
+                fig.add_trace(go.Bar(
+                    x=categories,
+                    y=[100 - pct for pct in match_percentages],
+                    name="Gap %",
+                    marker_color='rgba(244, 67, 54, 0.6)',
+                    text=[f"{100 - pct}%" for pct in match_percentages],
+                    textposition='outside',
+                ))
+                
+                fig.update_layout(
+                    title="Category Match vs Gap Analysis",
+                    barmode='stack',
+                    yaxis_title="Percentage",
+                    xaxis_title="Category",
+                    yaxis_range=[0, 100],
+                    height=500,
                 )
-                fig.update_layout(yaxis_title="Match Percentage")
                 st.plotly_chart(fig, use_container_width=True)
+                
+                # Detailed gap breakdown
+                st.markdown("#### Detailed Gap Breakdown")
+                gap_data = []
+                for cat in categories:
+                    gap_data.append({
+                        "Category": cat,
+                        "Matched": matched_counts[categories.index(cat)],
+                        "Missing": missing_counts[categories.index(cat)],
+                        "Match %": match_percentages[categories.index(cat)],
+                        "Gap %": 100 - match_percentages[categories.index(cat)]
+                    })
+                
+                gap_df = __import__('pandas').DataFrame(gap_data)
+                st.dataframe(gap_df, use_container_width=True, hide_index=True)
             else:
                 st.caption("No category data available")
         

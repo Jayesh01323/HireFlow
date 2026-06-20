@@ -25,14 +25,18 @@ HIGH_PRIORITY_SKILLS = {
     "React", "react", "Node.js", "node.js", "SQL", "sql", "Django", "django",
     "Flask", "flask", "FastAPI", "fastapi", "Spring", "spring", "Express", "express",
     "C++", "c++", "C#", "c#", "Go", "go", "Rust", "rust", "Swift", "swift", "Kotlin", "kotlin",
+    "Docker", "docker", "AWS", "aws", "Git", "git", "GitHub", "github",
+    "PostgreSQL", "postgresql", "MongoDB", "mongodb", "Redis", "redis",
+    "GraphQL", "graphql", "REST API", "rest api",
 }
 
 # Medium priority skills (important but not critical) - include both lowercase and proper case
 MEDIUM_PRIORITY_SKILLS = {
-    "Git", "git", "GitHub", "github", "Docker", "docker", "AWS", "aws", "Azure", "azure",
-    "GCP", "gcp", "Kubernetes", "kubernetes", "Terraform", "terraform", "Linux", "linux",
-    "Redis", "redis", "MongoDB", "mongodb", "PostgreSQL", "postgresql", "MySQL", "mysql",
-    "GraphQL", "graphql", "REST API", "rest api",
+    "Azure", "azure", "GCP", "gcp", "Kubernetes", "kubernetes", "Terraform", "terraform", "Linux", "linux",
+    "MySQL", "mysql", "Elasticsearch", "elasticsearch", "Vue", "vue", "Angular", "angular",
+    "Next.js", "next.js", "Nest.js", "nest.js", "Laravel", "laravel", "Rails", "rails",
+    "Jenkins", "jenkins", "CI/CD", "ci/cd", "Nginx", "nginx", "Apache", "apache",
+    "Pandas", "pandas", "NumPy", "numpy", "TensorFlow", "tensorflow", "PyTorch", "pytorch",
 }
 
 # Low priority skills (soft skills and general tools) - include both lowercase and proper case
@@ -40,6 +44,8 @@ LOW_PRIORITY_SKILLS = {
     "Communication", "communication", "Teamwork", "teamwork", "Problem Solving", "problem solving",
     "Time Management", "time management", "Agile", "agile", "Scrum", "scrum",
     "Jira", "jira", "Confluence", "confluence", "Testing", "testing",
+    "Bootstrap", "bootstrap", "Sass", "sass", "Webpack", "webpack", "Babel", "babel",
+    "Jest", "jest", "Mocha", "mocha", "Cypress", "cypress", "Selenium", "selenium",
 }
 
 
@@ -131,7 +137,7 @@ def calculate_weighted_match(
             "medium_priority_match": round(medium_priority_match, 1),
             "low_priority_match": round(low_priority_match, 1),
         }
-    except Exception as exc:
+    except Exception:
         # Fallback to ensure the function always returns the expected keys
         return {
             "match_percentage": 0.0,
@@ -178,6 +184,7 @@ def calculate_category_match(
         categories[category.value] = {
             "match_percentage": round(match_pct, 1),
             "matched_count": len(matched),
+            "missing_count": len(category_job_skills - category_resume_skills),
             "total_count": len(category_job_skills),
             "matched_skills": sorted(matched),
             "missing_skills": sorted(category_job_skills - category_resume_skills),

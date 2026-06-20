@@ -1,0 +1,152 @@
+{
+  "summary": {
+    "total_jds_tested": 8,
+    "avg_skills_extracted": 10.38,
+    "avg_match_score": 40.67,
+    "sample_resume_skills": 17
+  },
+  "skill_extraction": {
+    "jd1_python_backend": {
+      "extracted_skills": [
+        "aws",
+        "django",
+        "docker",
+        "fastapi",
+        "flask",
+        "git",
+        "kubernetes",
+        "linux",
+        "postgresql",
+        "python",
+        "redis",
+        "rest api"
+      ],
+      "count": 12
+    },
+    "jd2_fullstack": {
+      "extracted_skills": [
+        "angular",
+        "aws",
+        "azure",
+        "ci/cd",
+        "css",
+        "docker",
+        "gcp",
+        "git",
+        "html",
+        "javascript",
+        "mongodb",
+        "postgresql",
+        "python",
+        "react",
+        "sql",
+        "typescript"
+      ],
+      "count": 16
+    },
+    "jd3_data_science": {
+      "extracted_skills": [
+        "hadoop",
+        "jupyter",
+        "machine learning",
+        "matplotlib",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "seaborn",
+        "spark",
+        "sql",
+        "tensorflow"
+      ],
+      "count": 13
+    },
+    "jd4_devops": {
+      "extracted_skills": [
+        "ansible",
+        "aws",
+        "azure",
+        "bash",
+        "ci/cd",
+        "docker",
+        "gcp",
+        "git",
+        "gitlab",
+        "grafana",
+        "jenkins",
+        "kubernetes",
+        "linux",
+        "prometheus",
+        "python",
+        "terraform",
+        "unix"
+      ],
+      "count": 17
+    },
+    "jd5_frontend": {
+      "extracted_skills": [
+        "cypress",
+        "git",
+        "javascript",
+        "jest",
+        "mobx",
+        "next.js",
+        "react",
+        "redux",
+        "responsive design",
+        "typescript",
+        "vite",
+        "webpack"
+      ],
+      "count": 12
+    },
+    "jd6_edge_case_generic": {
+      "extracted_skills": [],
+      "count": 0
+    },
+    "jd7_edge_case_mixed": {
+      "extracted_skills": [
+        "angular",
+        "aws",
+        "azure",
+        "ci/cd",
+        "docker",
+        "git",
+        "java",
+        "javascript",
+        "kubernetes",
+        "python",
+        "react",
+        "sql",
+        "vue"
+      ],
+      "count": 13
+    },
+    "jd8_edge_case_ambiguous": {
+      "extracted_skills": [],
+      "count": 0
+    }
+  },
+  "match_analysis": {
+    "jd1_python_backend": 94.1,
+    "jd2_fullstack": 65.9,
+    "jd3_data_science": 24.5,
+    "jd4_devops": 40.0,
+    "jd5_frontend": 39.1,
+    "jd6_edge_case_generic": 0.0,
+    "jd7_edge_case_mixed": 61.8,
+    "jd8_edge_case_ambiguous": 0.0
+  },
+  "false_positives": {
+    "generic_terms": [],
+    "soft_skills": [],
+    "ambiguous_terms": []
+  },
+  "weaknesses": [],
+  "recommendations": [
+    "Add skill validation to ensure extracted terms are actual technologies",
+    "Implement confidence scoring for skill extraction",
+    "Add support for skill variants and abbreviations"
+  ]
+}

@@ -24,6 +24,8 @@ SKILL_LEARNING_RECOMMENDATIONS = {
     "Spring": "Learn Spring for enterprise-grade Java application development.",
     "Express": "Learn Express for building robust Node.js backend applications.",
     "Nest.js": "Learn Nest.js for scalable, modular Node.js server-side applications.",
+    "Laravel": "Learn Laravel for elegant PHP web application development with MVC architecture.",
+    "Rails": "Learn Rails for rapid Ruby web development with convention over configuration.",
     
     # Databases
     "SQL": "Learn SQL and database fundamentals for data manipulation and querying.",
@@ -31,6 +33,7 @@ SKILL_LEARNING_RECOMMENDATIONS = {
     "MySQL": "Learn MySQL for reliable, widely-used relational database management.",
     "MongoDB": "Learn MongoDB for flexible NoSQL document storage and scalability.",
     "Redis": "Learn Redis for high-performance caching and real-time data processing.",
+    "Elasticsearch": "Learn Elasticsearch for powerful search and analytics capabilities.",
     
     # Frontend
     "React": "Learn React for building modern, component-based user interfaces.",
@@ -38,6 +41,7 @@ SKILL_LEARNING_RECOMMENDATIONS = {
     "Vue": "Learn Vue for progressive, approachable frontend development.",
     "Next.js": "Learn Next.js for React with server-side rendering and optimization.",
     "TypeScript": "Learn TypeScript for type-safe JavaScript development.",
+    "Tailwind": "Learn Tailwind CSS for rapid utility-first styling and responsive design.",
     
     # DevOps & Cloud
     "Docker": "Learn Docker for containerization and consistent application deployment.",
@@ -46,11 +50,12 @@ SKILL_LEARNING_RECOMMENDATIONS = {
     "Azure": "Learn Azure for Microsoft's cloud platform and enterprise solutions.",
     "GCP": "Learn GCP for Google's cloud services and data/analytics capabilities.",
     "Terraform": "Learn Terraform for infrastructure as code and cloud resource management.",
+    "CI/CD": "Learn CI/CD practices for automated testing and deployment pipelines.",
     
     # Tools
     "Git": "Learn Git version control for team collaboration and code management.",
     "GitHub": "Learn GitHub for hosting code repositories and collaboration features.",
-    "CI/CD": "Learn CI/CD practices for automated testing and deployment pipelines.",
+    "Linux": "Learn Linux for system administration and server management.",
     
     # Data Science
     "Machine Learning": "Learn Machine Learning fundamentals for predictive modeling and AI.",
@@ -59,11 +64,20 @@ SKILL_LEARNING_RECOMMENDATIONS = {
     "PyTorch": "Learn PyTorch for flexible deep learning research and production.",
     "Pandas": "Learn Pandas for data manipulation and analysis in Python.",
     "NumPy": "Learn NumPy for numerical computing and array operations.",
+    "Data Science": "Learn Data Science fundamentals for statistical analysis and data-driven decision making.",
     
     # Testing
     "Testing": "Learn software testing principles and methodologies for quality assurance.",
     "Selenium": "Learn Selenium for automated web browser testing.",
     "Cypress": "Learn Cypress for modern, fast end-to-end testing.",
+    "Jest": "Learn Jest for JavaScript unit testing with snapshot testing capabilities.",
+    
+    # Programming Languages
+    "Python": "Strengthen Python skills for versatile development in web, data science, and automation.",
+    "JavaScript": "Master JavaScript for full-stack web development and browser-based applications.",
+    "Java": "Enhance Java skills for enterprise applications and Android development.",
+    "Go": "Learn Go for building scalable, high-performance concurrent systems.",
+    "Rust": "Learn Rust for memory-safe systems programming with modern language features.",
 }
 
 
