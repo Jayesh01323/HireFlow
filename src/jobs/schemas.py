@@ -7,9 +7,45 @@ Pydantic models for job postings and job-related data structures.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
+
+
+class Job(BaseModel):
+    """Standardized Job model for Job Discovery MVP."""
+    
+    id: str
+    title: str
+    company: str
+    location: str
+    work_mode: str
+    salary: Optional[str]
+    experience: str
+    description: str
+    skills: List[str]
+    source: str
+    source_url: str
+    posted_date: str
+    
+    class Config:
+        """Pydantic config."""
+        json_schema_extra = {
+            "example": {
+                "id": "job_001",
+                "title": "Python Developer Intern",
+                "company": "TechStart India",
+                "location": "Bangalore",
+                "work_mode": "Remote",
+                "salary": "₹15,000 - ₹25,000/month",
+                "experience": "0-1 years",
+                "description": "We are looking for a Python developer intern...",
+                "skills": ["Python", "Django", "SQL", "Git"],
+                "source": "Mock",
+                "source_url": "https://example.com/job/001",
+                "posted_date": "2024-01-15"
+            }
+        }
 
 
 class JobPosting(BaseModel):
@@ -85,6 +121,8 @@ class NormalizedJob(BaseModel):
     external_id: Optional[str] = None
     is_remote: bool = False
     experience_level: Optional[str] = None
+    experience_min: Optional[int] = None  # Minimum years of experience required
+    experience_max: Optional[int] = None  # Maximum years of experience required
     skills: list[str] = Field(default_factory=list)
     posted_date: Optional[datetime] = None
     normalized_at: datetime = Field(default_factory=datetime.utcnow)
