@@ -8,6 +8,7 @@ Defines the interface that all job connectors must implement.
 from __future__ import annotations
 
 import logging
+import re
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
@@ -108,8 +109,6 @@ class BaseJobConnector(ABC):
         if not salary_str:
             return None, None
         
-        import re
-        
         # Remove currency symbols and extract numbers
         cleaned = re.sub(r'[^\d.,-]', ' ', salary_str)
         numbers = re.findall(r'[\d,]+', cleaned.replace(',', ''))
@@ -174,7 +173,6 @@ class BaseJobConnector(ABC):
             return None
         
         # Remove excessive whitespace
-        import re
         cleaned = re.sub(r'\s+', ' ', description).strip()
         
         # Limit length

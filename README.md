@@ -265,103 +265,78 @@ hireflow-ai/
 ├── .gitignore                      # Git ignore rules
 ├── LICENSE                         # MIT License
 ├── README.md                       # This file
+├── Dockerfile                      # Container build
+├── docker-compose.yml              # Container orchestration
 │
 ├── data/                           # Database and uploads
-│   ├── hireflow.db                # SQLite database
-│   └── uploads/                   # User uploaded files
+│   └── .gitkeep                    # Ensure directory exists
 │
-├── docs/                          # Documentation
-│   ├── architecture.md            # System architecture
-│   ├── installation.md            # Installation guide
-│   ├── deployment.md              # Deployment guide
-│   ├── api-reference.md           # API documentation
-│   ├── user-guide.md              # User guide
-│   ├── developer-guide.md         # Developer guide
-│   └── roadmap.md                 # Project roadmap
+├── docs/                           # Documentation
+│   ├── architecture.md             # System architecture
+│   ├── installation.md             # Installation guide
+│   ├── api-reference.md            # API documentation
+│   ├── user-guide.md               # User guide
+│   ├── developer-guide.md          # Developer guide
+│   ├── roadmap.md                  # Project roadmap
+│   ├── deployment/                 # Deployment guides
+│   │   ├── railway.md
+│   │   ├── render.md
+│   │   └── streamlit.md
+│   ├── audits/                     # Audit reports
+│   │   ├── AUDIT_REPORT.md
+│   │   └── PRODUCT_AUDIT_REPORT.md
+│   ├── project/                    # Project management docs
+│   │   ├── CHANGELOG.md
+│   │   ├── VERSIONING.md
+│   │   ├── RELEASE_NOTES.md
+│   │   ├── elevator-pitch.md
+│   │   ├── linkedin-content.md
+│   │   └── resume-projects.md
+│   ├── security/                   # Security documentation
+│   │   └── SECURITY.md
+│   └── contributing/               # Community guidelines
+│       ├── CONTRIBUTING.md
+│       └── CODE_OF_CONDUCT.md
 │
 ├── pages/                         # Streamlit multi-page modules
-│   ├── Resume_Parser.py           # Resume upload and parsing
-│   ├── Job_Matcher.py             # Job matching engine
-│   ├── Job_Discovery.py           # Job search and aggregation
-│   ├── Skill_Gap.py               # Skill gap analysis
-│   ├── Career_Assistant.py        # AI career assistant
-│   ├── Application_Tracker.py     # Application management
-│   ├── Analytics_Dashboard.py     # Analytics and insights
-│   ├── Learning_Roadmap.py        # Learning path generation
-│   ├── Career_Fit.py              # Career compatibility
-│   ├── Interview_Prep.py          # Interview preparation
-│   └── Learning_Dashboard.py      # Learning progress
+│   ├── Resume_Parser.py
+│   ├── Job_Matcher.py
+│   ├── Job_Discovery.py
+│   ├── Skill_Gap.py
+│   ├── Career_Assistant.py
+│   ├── Application_Tracker.py
+│   ├── Analytics_Dashboard.py
+│   └── Learning_Dashboard.py
 │
 ├── src/                           # Core application logic
 │   ├── agents/                    # AI agents
-│   │   ├── career_copilot_agent.py
-│   │   ├── career_coach_agent.py
-│   │   ├── job_discovery_agent.py
-│   │   ├── ranking_agent.py
-│   │   ├── resume_match_agent.py
-│   │   ├── skill_gap_agent.py
-│   │   └── ...
 │   ├── ai/                        # AI integration
-│   │   ├── gemini_client.py       # Gemini API client
-│   │   ├── embeddings.py          # Text embeddings
-│   │   └── prompts.py             # AI prompt templates
 │   ├── api/                       # API endpoints
-│   │   ├── jobs_api.py
-│   │   ├── resume_api.py
-│   │   ├── alerts_api.py
-│   │   └── tracker_api.py
 │   ├── database/                  # Database layer
-│   │   ├── models.py              # SQLAlchemy models
-│   │   ├── repositories.py        # Data access layer
-│   │   └── migrations.py          # Database migrations
 │   ├── jobs/                      # Job processing
-│   │   ├── connectors/            # Platform-specific scrapers
-│   │   │   ├── linkedin.py
-│   │   │   ├── internshala.py
-│   │   │   ├── naukri.py
-│   │   │   ├── glassdoor.py
-│   │   │   └── wellfound.py
-│   │   ├── aggregator.py          # Job aggregation
-│   │   ├── deduplicator.py        # Duplicate removal
-│   │   ├── normalizer.py          # Data normalization
-│   │   ├── search_engine.py       # Job search
-│   │   └── schemas.py             # Job data models
 │   ├── services/                  # Business logic
-│   │   ├── match_engine.py        # Matching algorithm
-│   │   ├── skill_categorizer.py   # Skill classification
-│   │   ├── skill_extractor.py     # Skill extraction
-│   │   ├── ranking_engine.py      # Job ranking
-│   │   ├── recommendation_engine.py
-│   │   └── ...
 │   ├── utils/                     # Utilities
-│   │   ├── text_cleaner.py        # Text processing
-│   │   ├── constants.py           # Application constants
-│   │   └── skills.py              # Skill definitions
-│   ├── database.py                # Database initialization
-│   ├── matcher.py                 # Resume-job matching
-│   ├── parser.py                  # Resume parsing
-│   ├── gemini.py                  # Gemini integration
-│   └── utils.py                   # Common utilities
+│   ├── database.py
+│   ├── matcher.py
+│   ├── parser.py
+│   ├── gemini.py
+│   └── utils.py
 │
 ├── tests/                         # Test suite
 │   ├── test_job_connectors.py
-│   └── test_phase4_services.py
+│   ├── test_phase4_services.py
+│   ├── test_job_discovery_engine.py
+│   ├── debug_job_discovery.py
+│   └── validation_test_matcher.py
 │
 ├── reports/                       # Generated reports
-│   ├── architecture_setup_report.md
-│   ├── job_discovery_phase1_report.md
-│   └── phase4_implementation_report.md
+│   └── validation_report.json
 │
-├── screenshots/                   # Demo assets
-│   ├── dashboard.png
-│   ├── resume_parser.png
-│   ├── job_matcher.png
-│   └── analytics.png
-│
-└── .github/                       # GitHub configuration
-    ├── workflows/                 # CI/CD workflows
-    ├── ISSUE_TEMPLATE/            # Issue templates
-    └── PULL_REQUEST_TEMPLATE/     # PR templates
+└── resume-analyzer/               # Frontend app (Next.js)
+    ├── .gitignore
+    ├── package.json
+    ├── next.config.js
+    └── src/
 ```
 
 ---
@@ -430,7 +405,7 @@ Detailed API documentation is available in [docs/api-reference.md](docs/api-refe
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+We welcome contributions from the community! Please read our [CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ### How to Contribute
 1. Fork the repository

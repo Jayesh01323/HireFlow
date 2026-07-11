@@ -337,10 +337,11 @@ class JobSearchEngine:
     
     def _sort_by_date(self, jobs: List[Job] | List[JobSchema], descending: bool = True) -> List[Job] | List[JobSchema]:
         """Sort jobs by posted date."""
-        def get_date(job: Job | JobSchema):
-            return job.posted_date if job.posted_date else datetime.min
+        from datetime import datetime, timedelta
         
-        from datetime import datetime
+        def get_date(job: Job | JobSchema):
+            return job.posted_date if job.posted_date else datetime.now() - timedelta(days=365)
+        
         return sorted(jobs, key=get_date, reverse=descending)
     
     def get_all_jobs(self, limit: int = 100) -> List[Job]:

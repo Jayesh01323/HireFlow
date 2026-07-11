@@ -9,9 +9,8 @@ from __future__ import annotations
 import logging
 import sqlite3
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from src.jobs.schemas import Job
 from src.utils import get_env, load_env
 
 load_env()
@@ -61,17 +60,23 @@ class SavedJobsService:
         except Exception as e:
             logger.error(f"Error creating saved_jobs table: {e}")
     
-    def save_job(self, job: Job, user_id: Optional[int] = None) -> bool:
-        """Save a job for a user."""
+    def save_job(self, job: Dict[str, Any], user_id: Optional[int] = None) -> bool:
+        """Save a job for a user.
+        
+        Args:
+            job: Dictionary with job_id, job_title, company, location, salary, work_mode, source, source_url
+            user_id: Optional user ID
+        """
         try:
             with sqlite3.connect(self.db_path) as conn:
+                job_id = job.get("job_id", "")
                 # Check if job is already saved
                 cursor = conn.execute(
                     "SELECT id FROM saved_jobs WHERE job_id = ? AND (user_id = ? OR user_id IS NULL)",
-                    (job.id, user_id)
+                    (job_id, user_id)
                 )
                 if cursor.fetchone():
-                    logger.info(f"Job {job.id} already saved")
+                    logger.info(f"Job {job_id} already saved")
                     return False
                 
                 # Save the job
@@ -83,18 +88,18 @@ class SavedJobsService:
                     """,
                     (
                         user_id,
-                        job.id,
-                        job.title,
-                        job.company,
-                        job.location,
-                        job.salary,
-                        job.work_mode,
-                        job.source,
-                        job.source_url,
+                        job_id,
+                        job.get("job_title", "Unknown"),
+                        job.get("company", "Unknown"),
+                        job.get("location"),
+                        job.get("salary"),
+                        job.get("work_mode"),
+                        job.get("source", ""),
+                        job.get("source_url", ""),
                     )
                 )
                 conn.commit()
-                logger.info(f"Saved job {job.id} for user {user_id}")
+                logger.info(f"Saved job {job_id} for user {user_id}")
                 return True
         except Exception as e:
             logger.error(f"Error saving job: {e}")

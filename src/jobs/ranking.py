@@ -9,7 +9,7 @@ Integrates with existing HireFlow scoring mechanisms.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from src.jobs.schemas import NormalizedJob
@@ -177,8 +177,15 @@ class JobRankingEngine:
         if not job.posted_date:
             return 0.5  # Neutral score if no date
         
-        now = datetime.utcnow()
         posted_date = job.posted_date if isinstance(job.posted_date, datetime) else datetime.fromisoformat(str(job.posted_date))
+        
+        # Use timezone-aware now for comparison
+        now = datetime.now(timezone.utc)
+        
+        # Make posted_date timezone-aware if it's naive
+        if posted_date.tzinfo is None:
+            posted_date = posted_date.replace(tzinfo=timezone.utc)
+        
         days_old = (now - posted_date).days
         
         # Decay function: newer jobs get higher scores

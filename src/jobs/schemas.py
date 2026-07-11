@@ -6,7 +6,7 @@ Pydantic models for job postings and job-related data structures.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -125,7 +125,7 @@ class NormalizedJob(BaseModel):
     experience_max: Optional[int] = None  # Maximum years of experience required
     skills: list[str] = Field(default_factory=list)
     posted_date: Optional[datetime] = None
-    normalized_at: datetime = Field(default_factory=datetime.utcnow)
+    normalized_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
 
 class JobDeduplicationKey(BaseModel):

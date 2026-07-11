@@ -8,8 +8,8 @@ Helps prioritize newer and more relevant job listings.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Any, Optional
 
 from src.jobs.schemas import NormalizedJob
 
@@ -27,56 +27,70 @@ class JobFreshnessScorer:
         """
         self.max_age_days = max_age_days
     
-    def calculate_freshness_score(self, job: NormalizedJob) -> float:
+    def _get_posted_date(self, job: Any) -> Optional[datetime]:
+        """Get posted date from job, handling both NormalizedJob and DB Job models."""
+        if hasattr(job, 'posted_date'):
+            return job.posted_date
+        return None
+    
+    def _get_source(self, job: Any) -> str:
+        """Get source from job, handling both NormalizedJob and DB Job models."""
+        if hasattr(job, 'source'):
+            return job.source
+        return "unknown"
+    
+    def _get_skills(self, job: Any) -> list:
+        """Get skills from job, handling both NormalizedJob and DB Job models."""
+        if hasattr(job, 'skills') and job.skills:
+            return job.skills
+        return []
+    
+    def _get_url(self, job: Any) -> str:
+        """Get URL from job, handling both NormalizedJob and DB Job models."""
+        if hasattr(job, 'url'):
+            return job.url
+        return ""
+    
+    def calculate_freshness_score(self, job: Any) -> float:
         """Calculate freshness score for a job (0.0 to 1.0).
         
         Args:
-            job: Normalized job posting
+            job: Normalized job posting or DB Job model
             
         Returns:
             Freshness score between 0.0 (old) and 1.0 (very fresh)
         """
-        if not job.posted_date:
-            # If no posted date, give a neutral score
+        posted_date = self._get_posted_date(job)
+        if not posted_date:
             return 0.5
         
-        now = datetime.utcnow()
-        age = now - job.posted_date
-        age_days = age.total_seconds() / 86400  # Convert to days
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        if isinstance(posted_date, datetime):
+            age = now - posted_date
+        else:
+            return 0.5
         
-        # Linear decay from 1.0 to 0.0 over max_age_days
+        age_days = age.total_seconds() / 86400
+        
         if age_days <= 0:
-            return 1.0  # Posted today or in future
+            return 1.0
         elif age_days >= self.max_age_days:
-            return 0.0  # Too old
+            return 0.0
         else:
             return 1.0 - (age_days / self.max_age_days)
     
     def calculate_weighted_freshness_score(
         self,
-        job: NormalizedJob,
+        job: Any,
         source_weight: float = 1.0,
         skills_weight: float = 1.0,
     ) -> float:
-        """Calculate weighted freshness score considering multiple factors.
-        
-        Args:
-            job: Normalized job posting
-            source_weight: Weight for source reliability (default 1.0)
-            skills_weight: Weight for skill completeness (default 1.0)
-            
-        Returns:
-            Weighted freshness score between 0.0 and 1.0
-        """
+        """Calculate weighted freshness score considering multiple factors."""
         base_score = self.calculate_freshness_score(job)
+        source_factor = self._get_source_reliability(self._get_source(job))
+        skills = self._get_skills(job)
+        skills_factor = min(1.0, len(skills) / 10.0) if skills else 0.5
         
-        # Source reliability factor
-        source_factor = self._get_source_reliability(job.source)
-        
-        # Skills completeness factor
-        skills_factor = min(1.0, len(job.skills) / 10.0) if job.skills else 0.5
-        
-        # Calculate weighted score
         weighted_score = (
             base_score * 0.6 +
             source_factor * 0.2 * source_weight +
@@ -86,14 +100,7 @@ class JobFreshnessScorer:
         return min(1.0, max(0.0, weighted_score))
     
     def _get_source_reliability(self, source: str) -> float:
-        """Get source reliability score (0.0 to 1.0).
-        
-        Args:
-            source: Job source name
-            
-        Returns:
-            Reliability score for the source
-        """
+        """Get source reliability score (0.0 to 1.0)."""
         source_scores = {
             "linkedin": 0.9,
             "naukri": 0.85,
@@ -106,20 +113,11 @@ class JobFreshnessScorer:
             "glassdoor": 0.8,
             "company_careers": 0.9,
         }
-        
         return source_scores.get(source.lower(), 0.7)
     
-    def get_freshness_category(self, job: NormalizedJob) -> str:
-        """Get freshness category for a job.
-        
-        Args:
-            job: Normalized job posting
-            
-        Returns:
-            Freshness category: 'very_fresh', 'fresh', 'moderate', 'stale'
-        """
+    def get_freshness_category(self, job: Any) -> str:
+        """Get freshness category for a job."""
         score = self.calculate_freshness_score(job)
-        
         if score >= 0.8:
             return "very_fresh"
         elif score >= 0.6:
@@ -131,50 +129,27 @@ class JobFreshnessScorer:
     
     def filter_by_freshness(
         self,
-        jobs: list[NormalizedJob],
+        jobs: list[Any],
         min_score: float = 0.5,
-    ) -> list[NormalizedJob]:
-        """Filter jobs by minimum freshness score.
-        
-        Args:
-            jobs: List of normalized job postings
-            min_score: Minimum freshness score (default 0.5)
-            
-        Returns:
-            Filtered list of jobs
-        """
+    ) -> list[Any]:
+        """Filter jobs by minimum freshness score."""
         return [job for job in jobs if self.calculate_freshness_score(job) >= min_score]
     
     def sort_by_freshness(
         self,
-        jobs: list[NormalizedJob],
+        jobs: list[Any],
         descending: bool = True,
-    ) -> list[NormalizedJob]:
-        """Sort jobs by freshness score.
-        
-        Args:
-            jobs: List of normalized job postings
-            descending: Sort in descending order (default True)
-            
-        Returns:
-            Sorted list of jobs
-        """
+    ) -> list[Any]:
+        """Sort jobs by freshness score."""
         return sorted(
             jobs,
             key=lambda j: self.calculate_freshness_score(j),
             reverse=descending
         )
     
-    def batch_score(self, jobs: list[NormalizedJob]) -> dict[str, float]:
-        """Calculate freshness scores for a batch of jobs.
-        
-        Args:
-            jobs: List of normalized job postings
-            
-        Returns:
-            Dictionary mapping job URLs to freshness scores
-        """
+    def batch_score(self, jobs: list[Any]) -> dict[str, float]:
+        """Calculate freshness scores for a batch of jobs."""
         scores = {}
         for job in jobs:
-            scores[job.url] = self.calculate_freshness_score(job)
+            scores[self._get_url(job)] = self.calculate_freshness_score(job)
         return scores

@@ -7,14 +7,11 @@ Search, filter, and save jobs from various job boards.
 
 from __future__ import annotations
 
-import json
-import sqlite3
 from pathlib import Path
 
 import streamlit as st
 
 from src.jobs.aggregator import JobAggregator
-from src.matcher import analyze_match
 from src.services.job_discovery_service import JobDiscoveryService
 from src.services.ranking_engine import RankingEngine
 from src.services.saved_jobs_service import SavedJobsService
@@ -367,12 +364,12 @@ if search_button or search_query:
                                     st.error(f"Error saving job: {e}")
                         
                         with col2:
-                            if st.button("🔗 Apply", key=f"apply_{job.source}_{job.external_id}", use_container_width=True):
-                                st.info(f"Opening application page for {job.title} at {job.company}...")
-                                # In production, this would open the actual job URL
+                            st.link_button("🔗 Apply", job.url, use_container_width=True)
                         
                         with col3:
                             if st.button("📋 Copy Link", key=f"copy_{job.source}_{job.external_id}", use_container_width=True):
+                                import pyperclip
+                                pyperclip.copy(job.url)
                                 st.toast(f"Copied: {job.url}")
                         
                         st.divider()

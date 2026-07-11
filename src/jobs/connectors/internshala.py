@@ -63,7 +63,9 @@ class InternshalaConnector(BaseJobConnector):
             return jobs[:limit]
             
         except Exception as e:
-            logger.error(f"Error searching Internshala jobs: {e}")
+            logger.error(f"Error searching Internshala jobs: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return jobs
     
     def _build_search_params(

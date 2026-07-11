@@ -21,10 +21,14 @@ from src.jobs.connectors.internshala import InternshalaConnector
 from src.jobs.connectors.linkedin import LinkedInConnector
 from src.jobs.connectors.naukri import NaukriConnector
 from src.jobs.connectors.unstop import UnstopConnector
-from src.jobs.connectors.wellfound import WellfoundConnector
 from src.jobs.deduplicator import JobDeduplicator
 from src.jobs.freshness_scorer import JobFreshnessScorer
 from src.jobs.normalizer import JobNormalizer
+from src.jobs.pipeline_logger import (
+    FailureReason,
+    get_pipeline_logger,
+    PipelineLogger,
+)
 from src.jobs.schemas import JobPosting, NormalizedJob
 
 logger = logging.getLogger(__name__)
@@ -46,8 +50,8 @@ class JobAggregator:
     
     def _initialize_connectors(self) -> None:
         """Initialize all job source connectors."""
+        from src.jobs.connectors.wellfound import WellfoundConnector
         self.connectors = {
-            "apify": ApifyConnector(),
             "linkedin": LinkedInConnector(),
             "naukri": NaukriConnector(),
             "internshala": InternshalaConnector(),
@@ -90,13 +94,22 @@ class JobAggregator:
         """
         logger.info(f"Searching jobs: query={query}, location={location}, remote={remote}")
         
+        # Initialize pipeline logger for this search
+        pl = get_pipeline_logger()
+        pl.log_pipeline_start()
+        
         # Determine which sources to use
         search_sources = sources if sources else list(self.connectors.keys())
         
-        # Aggregate jobs from all sources
+        # Register all connectors in the pipeline logger
+        for source in search_sources:
+            pl.register_connector(source)
+        
+        # Aggregate jobs from all sources with instrumentation
         all_jobs: List[JobPosting] = []
         for source in search_sources:
             if source in self.connectors:
+                pl.log_start(source)
                 try:
                     jobs = self.connectors[source].search_jobs(
                         query=query,
@@ -107,14 +120,50 @@ class JobAggregator:
                         limit=limit // len(search_sources),
                     )
                     all_jobs.extend(jobs)
+                    pl.log_success(source, len(jobs))
                     logger.info(f"Found {len(jobs)} jobs from {source}")
+                except ImportError as e:
+                    reason, detail = pl.classify_failure(e)
+                    pl.log_failure(source, reason, detail, type(e).__name__)
+                    logger.error(f"Connector {source} missing dependencies: {e}")
+                    logger.error(f"Install required packages for {source} connector")
+                except ConnectionError as e:
+                    reason, detail = pl.classify_failure(e)
+                    pl.log_failure(source, reason, detail, type(e).__name__)
+                    logger.error(f"Connector {source} connection failed: {e}")
+                except TimeoutError as e:
+                    reason, detail = pl.classify_failure(e)
+                    pl.log_failure(source, reason, detail, type(e).__name__)
+                    logger.error(f"Connector {source} timed out: {e}")
                 except Exception as e:
-                    logger.error(f"Error searching {source}: {e}")
+                    reason, detail = pl.classify_failure(e)
+                    pl.log_failure(source, reason, detail, type(e).__name__)
+                    logger.error(f"Connector {source} failed: {type(e).__name__}: {e}")
+                    import traceback
+                    logger.error(f"Traceback: {traceback.format_exc()}")
+            else:
+                pl.log_skipped(source, f"Connector not found in registry")
         
-        # Fallback to mock jobs if no jobs found
+        pl.total_jobs_before_dedup = len(all_jobs)
+        
+        # Fallback to mock jobs only if ENABLE_MOCK_DATA is true
+        using_mock = False
         if not all_jobs:
-            logger.info("No jobs from connectors, loading mock jobs")
-            all_jobs = self._load_mock_jobs()
+            from src.utils import get_env
+            enable_mock = get_env("ENABLE_MOCK_DATA", "false").lower() == "true"
+            
+            if enable_mock:
+                logger.warning("⚠️ No jobs fetched from live connectors. Using mock/fallback job data.")
+                logger.warning("⚠️ Set APIFY_API_KEY in .env for live job search.")
+                all_jobs = self._load_mock_jobs()
+                using_mock = True
+                pl.used_mock_fallback = True
+                pl.mock_fallback_reason = "All live connectors returned zero jobs"
+            else:
+                logger.error("❌ No jobs fetched from live connectors and ENABLE_MOCK_DATA is false.")
+                logger.error("❌ Set APIFY_API_KEY in .env for live job search or set ENABLE_MOCK_DATA=true.")
+                pl.used_mock_fallback = False
+                pl.mock_fallback_reason = "No jobs from live connectors and ENABLE_MOCK_DATA is false"
         
         # Normalize jobs
         normalized_jobs = self.normalizer.batch_normalize(all_jobs)
@@ -122,11 +171,36 @@ class JobAggregator:
         
         # Deduplicate jobs
         unique_jobs = self.deduplicator.deduplicate_jobs(normalized_jobs)
+        pl.total_jobs_after_dedup = len(unique_jobs)
         logger.info(f"Deduplicated to {len(unique_jobs)} unique jobs")
+        
+        # Apply freshness filter: reject jobs older than max_age_days (default 30)
+        fresh_jobs = self.freshness_scorer.filter_by_freshness(
+            unique_jobs,
+            min_score=0.0,  # We use the filter to REMOVE stale jobs, not score them
+        )
+        # Actually filter out jobs with freshness score of 0.0 (older than max_age_days)
+        fresh_jobs = [
+            job for job in unique_jobs
+            if self.freshness_scorer.calculate_freshness_score(job) > 0.0
+        ]
+        pl.total_jobs_after_freshness = len(fresh_jobs)
+        
+        # Track freshness counts per connector
+        for source in search_sources:
+            source_fresh = [j for j in fresh_jobs if j.source == source]
+            pl.set_freshness_count(source, len(source_fresh))
+        
+        stale_count = len(unique_jobs) - len(fresh_jobs)
+        if stale_count > 0:
+            logger.info(
+                f"🧹 Freshness filter removed {stale_count} stale jobs "
+                f"(older than {self.freshness_scorer.max_age_days} days)"
+            )
         
         # Store jobs in database
         try:
-            save_results = self.repository.batch_save_jobs(unique_jobs)
+            save_results = self.repository.batch_save_jobs(fresh_jobs)
             logger.info(f"Saved {save_results['success']} jobs to database")
         except Exception as e:
             logger.error(f"Error saving jobs to database: {e}")
@@ -134,7 +208,7 @@ class JobAggregator:
         # Update source statistics
         try:
             for source in search_sources:
-                source_jobs = [j for j in unique_jobs if j.source == source]
+                source_jobs = [j for j in fresh_jobs if j.source == source]
                 self.repository.update_job_source_stats(
                     source,
                     jobs_fetched=len(source_jobs),
@@ -148,7 +222,7 @@ class JobAggregator:
             self.repository.save_search_history(
                 query=query,
                 location=location,
-                total_results=len(unique_jobs),
+                total_results=len(fresh_jobs),
                 filters={
                     "remote": remote,
                     "experience": experience,
@@ -161,15 +235,28 @@ class JobAggregator:
         # Rank jobs if resume skills provided
         if resume_skills:
             ranked_jobs = self.ranking_engine.rank_jobs(
-                unique_jobs,
+                fresh_jobs,
                 resume_skills,
                 user_preferences or {},
             )
             logger.info(f"Ranked {len(ranked_jobs)} jobs")
-            return ranked_jobs[:limit]
+            final_results = ranked_jobs[:limit]
+        else:
+            # Return unranked jobs if no resume skills
+            final_results = [{"job": job, "overall_score": 0.5} for job in fresh_jobs[:limit]]
         
-        # Return unranked jobs if no resume skills
-        return [{"job": job, "overall_score": 0.5} for job in unique_jobs[:limit]]
+        # Mark which connectors contributed to final results
+        pl.total_jobs_final = len(final_results)
+        for result in final_results:
+            job = result.get("job", result)
+            source = getattr(job, "source", None)
+            if source:
+                pl.mark_used_in_final(source)
+        
+        # Log pipeline end with summary
+        pl.log_pipeline_end()
+        
+        return final_results
     
     def _load_mock_jobs(self) -> List[JobPosting]:
         """Load mock jobs from JSON file for testing."""
