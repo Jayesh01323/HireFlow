@@ -439,7 +439,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Jayesh**
 - GitHub: [@Jayesh01323](https://github.com/Jayesh01323)
-- LinkedIn: [Jayesh](https://linkedin.com/in/jayesh)
+- LinkedIn: [Jayesh](https://www.linkedin.com/in/jayesh-patil-5a2a082b5)
 - Email: jayesh@example.com
 
 ### Acknowledgments
@@ -476,7 +476,7 @@ If you find this project helpful, please consider:
 For questions, support, or collaboration:
 - Open an [Issue](https://github.com/Jayesh01323/HireFlow/issues)
 - Email: jayesh@example.com
-- LinkedIn: [Jayesh](https://linkedin.com/in/jayesh)
+- LinkedIn: [Jayesh](https://www.linkedin.com/in/jayesh-patil-5a2a082b5)
 
 ---
 
