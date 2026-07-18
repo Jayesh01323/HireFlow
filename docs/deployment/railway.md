@@ -69,7 +69,7 @@ Add these in Railway dashboard:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
-DATABASE_URL=postgresql://postgres:password@host:port/railway
+DATABASE_URL=postgresql://postgres:your_password@host:port/railway
 PORT=8501
 ```
 

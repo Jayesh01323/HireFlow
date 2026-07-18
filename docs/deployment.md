@@ -180,7 +180,7 @@ Add these in Render dashboard:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
-DATABASE_URL=postgresql://user:password@host:port/database
+DATABASE_URL=postgresql://user:your_password@host:port/database
 PORT=8501
 ```
 
@@ -200,7 +200,7 @@ Click "Create Web Service" and wait for deployment.
 #### Update Environment Variables
 
 ```env
-DATABASE_URL=postgresql://hireflow_user:password@host:port/hireflow
+DATABASE_URL=postgresql://hireflow_user:your_password@host:port/hireflow
 ```
 
 #### Run Migrations
@@ -407,7 +407,7 @@ services:
       - "8501:8501"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - DATABASE_URL=postgresql://postgres:password@db:5432/hireflow
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/hireflow
     volumes:
       - ./data:/app/data
     depends_on:
@@ -417,7 +417,7 @@ services:
     image: postgres:15
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=hireflow
     volumes:
       - postgres_data:/var/lib/postgresql/data

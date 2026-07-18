@@ -48,5 +48,12 @@ data/*.db
 reports/*.pdf
 reports/*.docx
 
+# Test fixtures with sensitive data
+tests/*.html
+
+# Secret scan results
+secret_scan/
+output.txt
+
 # Cursor
 .cursor/

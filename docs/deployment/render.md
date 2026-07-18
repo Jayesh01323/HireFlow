@@ -63,7 +63,7 @@ Add these in Render dashboard:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
-DATABASE_URL=postgresql://hireflow_user:password@host:port/hireflow
+DATABASE_URL=postgresql://hireflow_user:your_password@host:port/hireflow
 PORT=8501
 PYTHON_VERSION=3.12
 ```
@@ -126,7 +126,7 @@ psycopg2-binary>=2.9.0
 Update `DATABASE_URL` in environment variables:
 
 ```env
-DATABASE_URL=postgresql://hireflow_user:password@host:port/hireflow
+DATABASE_URL=postgresql://hireflow_user:your_password@host:port/hireflow
 ```
 
 ### Run Migrations
